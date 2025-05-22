@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게임 년도 해석 도구</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #4cc9f0;
+            --warning: #f72585;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            color: var(--dark);
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+            animation: fadeIn 1s ease;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(to right, var(--primary), var(--warning));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .subtitle {
+            color: var(--secondary);
+            font-weight: 300;
+            margin-bottom: 1rem;
+        }
+
+        .tool-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transform: translateY(0);
+        }
+
+        .tool-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .year-btn {
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, var(--primary), var(--accent));
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .year-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 20px rgba(67, 97, 238, 0.4);
+        }
+
+        .year-btn:active {
+            transform: translateY(1px);
+        }
+
+        .year-btn:disabled {
+            background: linear-gradient(45deg, #adb5bd, #6c757d);
+            transform: none;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .year-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: translateX(-100%);
+        }
+
+        .year-btn:hover::after {
+            animation: shine 1.5s infinite;
+        }
+
+        .result-container {
+            background: linear-gradient(135deg, #ffffff 0%, #f1f3f5 100%);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .result-label {
+            font-size: 1rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            display: block;
+            font-weight: 500;
+        }
+
+        .result-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-align: center;
+            min-height: 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+        }
+
+        .reset-btn {
+            padding: 0.8rem 2rem;
+            background: linear-gradient(45deg, var(--warning), #b5179e);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+            box-shadow: 0 4px 15px rgba(247, 37, 133, 0.3);
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(247, 37, 133, 0.4);
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            margin-top: 2rem;
+        }
+
+        .info-card h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent);
+            display: inline-block;
+        }
+
+        .rule-item {
+            display: flex;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+
+        .rule-year {
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 50px;
+        }
+
+        .rule-value {
+            margin-left: 1rem;
+            color: var(--dark);
+        }
+
+        .example {
+            font-style: italic;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background-color: rgba(72, 149, 239, 0.1);
+            border-radius: 8px;
+            color: var(--secondary);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shine {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        footer {
+            margin-top: 3rem;
+            text-align: center;
+            color: var(--secondary);
+            font-size: 0.9rem;
+        }
+
+        /* 반응형 디자인 */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            .year-btn {
+                padding: 0.8rem 1.5rem;
+                font-size: 1rem;
+            }
+            .result-value {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>화이트데이 체육창고 암호 해석</h1>
+            <p class="subtitle">버튼을 클릭하면 선택된 순서대로 숫자가 조합됩니다</p>
+        </header>
+
+        <main>
+            <div class="tool-container">
+                <div class="buttons">
+                    <button class="year-btn" onclick="addNumber('83')">83</button>
+                    <button class="year-btn" onclick="addNumber('86')">86</button>
+                    <button class="year-btn" onclick="addNumber('94')">94</button>
+                    <button class="year-btn" onclick="addNumber('96')">96</button>
+                </div>
+
+                <div class="result-container">
+                    <span class="result-label">생성된 코드</span>
+                    <div class="result-value" id="result">-</div>
+                </div>
+
+                <div style="text-align: center;">
+                    <button class="reset-btn" onclick="reset()">초기화</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let selectedNumbers = [];
+        const numberMap = {
+            '83': '9',
+            '86': '5',
+            '94': '2',
+            '96': '4'
+        };
+
+        function addNumber(num) {
+            if (selectedNumbers.includes(num)) return;
+            
+            selectedNumbers.push(num);
+            updateResult();
+            
+            // 선택된 버튼 비활성화
+            document.querySelectorAll('.year-btn').forEach(btn => {
+                if (btn.textContent === num) {
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+                }
+            });
+        }
+
+        function updateResult() {
+            const resultElement = document.getElementById('result');
+            if (selectedNumbers.length === 0) {
+                resultElement.textContent = '-';
+            } else {
+                resultElement.textContent = selectedNumbers.map(n => numberMap[n]).join('');
+                // 결과 애니메이션
+                resultElement.style.animation = 'none';
+                void resultElement.offsetWidth; // 트리거 리플로우
+                resultElement.style.animation = 'fadeIn 0.5s ease';
+            }
+        }
+
+        function reset() {
+            selectedNumbers = [];
+            updateResult();
+            document.querySelectorAll('.year-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('disabled');
+            });
+        }
+    </script>
+</body>
+</html>
