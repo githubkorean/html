@@ -10,6 +10,6 @@
 
 [YouTube Shorts to Normal](https://githubkorean.github.io/html/?YouTube%20Shorts%20to%20Normal/YouTube%20Shorts%20to%20Normal.html)
 
-[HTML Editor](https://githubkorean.github.io/html/?HTML%20Editor/HTML%20Editor.html)
+[HTML Editor](https://githubkorean.github.io/HTML-Editor/)
 
 [AES-256 File Encryption](https://githubkorean.github.io/html/?AES-256%20File%20Encryption/AES-256%20File%20Encryption.html)
