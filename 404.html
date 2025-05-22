@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>404 Not Found - 우주 어딘가로 날아간 페이지</title>
+  <style>
+    /* 우주 배경 */
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000 url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxleHBsb3JlLWZlZWR8MXx8fGVufDB8fHx8fA%3D%3D&w=1000&q=80') no-repeat center center;
+      background-size: cover;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Arial', sans-serif;
+      color: white;
+      text-align: center;
+    }
+
+    /* 네온 글자 효과 */
+    .neon {
+      font-size: 8rem;
+      font-weight: bold;
+      text-shadow: 
+        0 0 10px #fff,
+        0 0 20px #fff,
+        0 0 30px #e60073,
+        0 0 40px #e60073,
+        0 0 50px #e60073,
+        0 0 60px #e60073,
+        0 0 70px #e60073;
+      animation: flicker 1.5s infinite alternate;
+    }
+
+    @keyframes flicker {
+      0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+        text-shadow:
+          0 0 10px #fff,
+          0 0 20px #fff,
+          0 0 30px #e60073,
+          0 0 40px #e60073,
+          0 0 50px #e60073,
+          0 0 60px #e60073,
+          0 0 70px #e60073;
+      }
+      20%, 24%, 55% {
+        text-shadow: none;
+      }
+    }
+
+    /* 별똥별 애니메이션 */
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: shooting-star linear infinite;
+    }
+
+    @keyframes shooting-star {
+      0% {
+        transform: translate(0, 0) rotate(45deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(1000px, 1000px) rotate(45deg);
+        opacity: 0;
+      }
+    }
+
+    /* 행성 회전 */
+    .planet {
+      position: absolute;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #4d4dff, #000);
+      box-shadow: 0 0 50px #4d4dff;
+      top: 50%;
+      left: 20%;
+      animation: spin 20s linear infinite;
+    }
+
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
+
+    /* 버튼 스타일 */
+    .home-btn {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 12px 24px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid white;
+      border-radius: 50px;
+      font-size: 1.2rem;
+      text-decoration: none;
+      transition: all 0.3s;
+      backdrop-filter: blur(5px);
+    }
+
+    .home-btn:hover {
+      background: rgba(255, 255, 255, 0.4);
+      transform: scale(1.05);
+    }
+
+    /* 메시지 박스 */
+    .message {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 2rem;
+      border-radius: 20px;
+      display: inline-block;
+      margin-top: 2rem;
+      backdrop-filter: blur(5px);
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+  <!-- 행성 추가 -->
+  <div class="planet"></div>
+
+  <!-- 메인 콘텐츠 -->
+  <div style="position: relative; z-index: 10; padding-top: 10vh;">
+    <h1 class="neon">404</h1>
+    <div class="message">
+      <h2>🚀 페이지가 우주 어딘가로 사라졌습니다!</h2>
+      <p>찾으시는 페이지는 블랙홀에 빨려들어가거나,<br> 다른 은하계로 날아갔을 수 있습니다.</p>
+      <a href="?" class="home-btn">지구로 돌아가기</a>
+    </div>
+  </div>
+
+  <!-- 별똥별 생성 스크립트 -->
+  <script>
+    // 별똥별 생성
+    function createStars() {
+      const count = 20;
+      for (let i = 0; i < count; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.width = Math.random() * 3 + 'px';
+        star.style.height = star.style.width;
+        star.style.left = Math.random() * window.innerWidth + 'px';
+        star.style.top = Math.random() * window.innerHeight + 'px';
+        star.style.animationDuration = Math.random() * 3 + 2 + 's';
+        star.style.animationDelay = Math.random() * 5 + 's';
+        document.body.appendChild(star);
+      }
+    }
+
+    // 페이지 로드 시 별 생성
+    window.onload = function() {
+      createStars();
+      // 10초마다 새로운 별 추가
+      setInterval(createStars, 10000);
+    };
+  </script>
+</body>
+</html>
