@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>101 게임</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+            color: #333;
+            position: relative;
+        }
+        .game-container {
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .status {
+            font-size: 1.2em;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+        }
+        .input-area {
+            margin: 20px 0;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 60px;
+            text-align: center;
+            margin-right: 10px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            text-align: left;
+            min-height: 60px;
+        }
+        .player {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        .ai {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .win-message {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .player-win {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .ai-win {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .music-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255,255,255,0.8);
+            padding: 8px 12px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .music-toggle {
+            width: 40px;
+            height: 20px;
+            background-color: #ccc;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .music-toggle.active {
+            background-color: #3498db;
+        }
+        .toggle-switch {
+            width: 16px;
+            height: 16px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+        .music-toggle.active .toggle-switch {
+            transform: translateX(20px);
+        }
+        .music-icon {
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+	<!-- 기존 <body> 내부 최상단에 추가 -->
+	<div id="startOverlay" style="
+		position: fixed;
+		top: 0; left: 0; right: 0; bottom: 0;
+		background: rgba(255,255,255,0.9);
+		backdrop-filter: blur(8px);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 9999;
+		cursor: pointer;
+		font-size: 2rem;
+		font-weight: bold;
+		color: #3498db;
+		user-select: none;
+	">
+		게임 시작
+	</div>
+    <div class="music-control">
+        <span class="music-icon">🎵</span>
+        <div class="music-toggle active" id="musicToggle">
+            <div class="toggle-switch"></div>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <h1>🎮 101 게임</h1>
+        <p>목표: 총합이 101점에 먼저 도달하는 쪽이 승리합니다!</p>
+        <p>1~10 사이를 입력하세요.</p>
+        
+        <div class="status" id="status">[턴 1] 현재 총합: 0</div>
+        
+        <div class="input-area">
+            <input type="number" id="userInput" min="1" max="10" value="1">
+            <button id="submitBtn">입력</button>
+        </div>
+        
+        <div class="result" id="result"></div>
+        
+        <div id="winMessage" class="win-message" style="display: none;"></div>
+		<a href="https://githubkorean.github.io/Russian-Roulette/">러시안 룰렛 하러가기</a>
+    </div>
+
+    <!-- 배경 음악 (히든 오디오 요소) -->
+    <audio id="bgMusic" loop>
+        <source src="Funkeriffic.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+	
+	<audio id="typingSound">
+		<source src="typing.mp3" type="audio/mpeg">
+	</audio>
+
+    <script>
+		const startOverlay = document.getElementById('startOverlay');
+
+		startOverlay.addEventListener('click', () => {
+			// 오버레이 숨기기
+			startOverlay.style.display = 'none';
+
+			// 음악 재생 시도
+			bgMusic.volume = 0.3;
+			bgMusic.play().catch(e => console.log("Audio play failed:", e));
+		});
+        // 게임 변수
+        let total = 0;
+        let turn = 1;
+        let gameOver = false;
+        
+        // DOM 요소
+        const statusElement = document.getElementById('status');
+        const userInput = document.getElementById('userInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const resultElement = document.getElementById('result');
+        const winMessage = document.getElementById('winMessage');
+        const bgMusic = document.getElementById('bgMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        
+        // 페이지 로드 시 음악 자동 재생 시도
+        document.addEventListener('DOMContentLoaded', function() {
+            // 사용자 상호작용 후에만 음악 재생이 가능하므로 버튼 클릭 이벤트에 연결
+            document.body.addEventListener('click', initAudio, { once: true });
+        });
+        
+        // 오디오 초기화 (사용자 상호작용 후 호출)
+        function initAudio() {
+            bgMusic.volume = 0.3; // 볼륨 조절
+            bgMusic.play().catch(e => console.log("Audio play failed:", e));
+        }
+
+		function playTypingSound() {
+			const sound = document.getElementById('typingSound');
+			if (sound) {
+				sound.currentTime = 0;
+				sound.play().catch(() => {}); // 무음 상태에서도 예외 방지
+			}
+		}
+
+        // 음악 토글
+        musicToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            if (this.classList.contains('active')) {
+                bgMusic.play();
+            } else {
+                bgMusic.pause();
+            }
+        });
+        
+        // 게임 초기화
+        function initGame() {
+            total = 0;
+            turn = 1;
+            gameOver = false;
+            statusElement.textContent = `[턴 ${turn}] 현재 총합: ${total}`;
+            resultElement.innerHTML = '';
+            winMessage.style.display = 'none';
+            userInput.disabled = false;
+            submitBtn.disabled = false;
+            userInput.value = 1;
+        }
+        
+        // AI 선택 함수
+        function aiSelect(userMove) {
+            const targetTotals = [2, 13, 24, 35, 46, 57, 68, 79, 90, 101];
+            const current = total;
+            const possibleMoves = [];
+            
+            // 1. 목표값 달성 가능한 이동 찾기
+            targetTotals.forEach(target => {
+                const aiMove = target - current;
+                if (aiMove >= 1 && aiMove <= 10) {
+                    possibleMoves.push(aiMove);
+                }
+            });
+            
+            // 2. 가능한 이동이 있으면 랜덤 선택
+            if (possibleMoves.length > 0) {
+                const randomIndex = Math.floor(Math.random() * possibleMoves.length);
+                return possibleMoves[randomIndex];
+            }
+            
+            // 3. 없으면 랜덤 숫자 선택
+            return Math.floor(Math.random() * 10) + 1;
+        }
+        
+        // 게임 진행
+		function playGame() {
+			if (gameOver) return;
+
+			const userMove = parseInt(userInput.value);
+
+			// 입력 유효성 검사
+			if (isNaN(userMove) || userMove < 1 || userMove > 10) {
+				alert('1에서 10 사이의 숫자를 입력하세요!');
+				return;
+			}
+
+			// 플레이어 입력 시 바로 입력창, 버튼 비활성화해서 연타 방지
+			userInput.disabled = true;
+			submitBtn.disabled = true;
+
+			// 사용자 이동 처리
+			total += userMove;
+			resultElement.innerHTML += `<div class="player">🧑 당신: ${userMove} → 총합: ${total}</div>`;
+			playTypingSound();
+			statusElement.textContent = `[턴 ${turn}] 현재 총합: ${total}`;
+
+			// 승리 조건 확인
+			if (total >= 101) {
+				endGame(true);
+				return;
+			}
+
+			// 컴퓨터 차례 (1초 딜레이)
+			setTimeout(() => {
+				const aiMove = aiSelect(userMove);
+				total += aiMove;
+				resultElement.innerHTML += `<div class="ai">🤖 컴퓨터: ${aiMove} → 총합: ${total}</div>`;
+				playTypingSound();
+				statusElement.textContent = `[턴 ${turn}] 현재 총합: ${total}`;
+
+				// 스크롤 최신 결과로 이동
+				resultElement.scrollTop = resultElement.scrollHeight;
+
+				// 컴퓨터 승리 조건 확인
+				if (total >= 101) {
+					endGame(false);
+					return;
+				}
+
+				turn++;
+				statusElement.textContent = `[턴 ${turn}] 현재 총합: ${total}`;
+
+				// 다시 플레이어 입력 활성화
+				userInput.disabled = false;
+				submitBtn.disabled = false;
+				userInput.value = 1;
+				userInput.focus();
+
+			}, 1000);
+		}
+
+        // 게임 종료 처리
+        function endGame(isPlayerWin) {
+            gameOver = true;
+            userInput.disabled = true;
+            submitBtn.disabled = true;
+            
+            if (isPlayerWin) {
+                winMessage.textContent = '🎉 당신이 이겼습니다!';
+                winMessage.className = 'win-message player-win';
+            } else {
+                winMessage.textContent = '💥 AI가 이겼습니다!';
+                winMessage.className = 'win-message ai-win';
+            }
+            
+            winMessage.style.display = 'block';
+            winMessage.innerHTML += '<br><button onclick="initGame()" style="margin-top: 10px;">다시 하기</button>';
+        }
+        
+        // 이벤트 리스너
+        submitBtn.addEventListener('click', playGame);
+        userInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                playGame();
+            }
+        });
+        
+        // 게임 시작
+        initGame();
+    </script>
+</body>
+</html>
