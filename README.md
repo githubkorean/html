@@ -8,7 +8,7 @@
 
 [도구]
 
-[YouTube Shorts to Normal](https://githubkorean.github.io/html/?YouTube%20Shorts%20to%20Normal/YouTube%20Shorts%20to%20Normal.html)
+[YouTube Shorts to Normal](https://githubkorean.github.io/Shorts-to-Normal/)
 
 [HTML Editor](https://githubkorean.github.io/HTML-Editor/)
 
