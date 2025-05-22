@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>러시안 룰렛</title>
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --secondary-color: #2c3e50;
+            --accent-color: #f39c12;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a1a;
+            color: var(--light-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background-image: radial-gradient(circle, #2c3e50 0%, #1a1a1a 100%);
+            position: relative;
+        }
+
+        /* 게임 시작 오버레이 */
+        .start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        .start-overlay h2 {
+            font-size: 3rem;
+            color: var(--light-color);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--primary-color);
+            animation: pulse 2s infinite;
+        }
+
+        .start-overlay p {
+            font-size: 1.2rem;
+            color: var(--light-color);
+            opacity: 0.8;
+        }
+
+        /* 음악 컨트롤 */
+        .music-control {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px 15px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .music-icon {
+            font-size: 20px;
+        }
+
+        .music-toggle {
+            width: 50px;
+            height: 25px;
+            background-color: #555;
+            border-radius: 25px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .music-toggle.active {
+            background-color: var(--accent-color);
+        }
+
+        .toggle-switch {
+            width: 21px;
+            height: 21px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+        }
+
+        .music-toggle.active .toggle-switch {
+            transform: translateX(25px);
+        }
+
+        .game-container {
+            background-color: rgba(44, 62, 80, 0.9);
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+        }
+
+        h1 {
+            color: var(--light-color);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 1px;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        #status {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--accent-color);
+            text-align: center;
+        }
+
+        #debug-status {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        #messages {
+            min-height: 60px;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .death-scores {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .score {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .score-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .player-score .score-value {
+            color: var(--success-color);
+        }
+
+        .computer-score .score-value {
+            color: var(--danger-color);
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            min-width: 150px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        button:hover::after {
+            opacity: 1;
+        }
+
+        #start-button {
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            color: white;
+        }
+
+        #fire-button {
+            background: linear-gradient(135deg, var(--danger-color), #c0392b);
+            color: white;
+        }
+
+        #spin-button {
+            background: linear-gradient(135deg, var(--warning-color), #e67e22);
+            color: white;
+        }
+
+        #reset-death-counts {
+            background: linear-gradient(135deg, var(--info-color), #2980b9);
+            color: white;
+            margin-top: 20px;
+            display: none;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .revolver {
+            position: relative;
+            width: 250px;
+            height: 150px;
+            margin: 30px auto;
+        }
+
+        .cylinder {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background-color: #333;
+            border: 8px solid #222;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+        }
+
+        .chamber-indicator {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: var(--accent-color);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+        }
+
+        .chamber-position {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 28px;
+            height: 28px;
+            margin: -14px 0 0 -14px;
+            background-color: #444;
+            border-radius: 50%;
+            border: 2px solid #555;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-origin: 0 0;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .button-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .start-overlay h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* 애니메이션 효과 */
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinning {
+            animation: spin 0.5s linear;
+        }
+    </style>
+</head>
+<body>
+    <!-- 음악 컨트롤 -->
+    <div class="music-control">
+        <span class="music-icon">🎵</span>
+        <div class="music-toggle active" id="musicToggle">
+            <div class="toggle-switch"></div>
+        </div>
+    </div>
+
+    <!-- 게임 시작 오버레이 -->
+    <div class="start-overlay" id="startOverlay">
+        <h2>GAME START</h2>
+        <p>화면을 클릭하여 시작</p>
+    </div>
+
+    <!-- 게임 메인 컨테이너 -->
+    <div class="game-container">
+        <h1>러시안 룰렛</h1>
+        
+        <div class="game-info">
+            <div class="status-container">
+                <div id="status">게임 준비</div>
+                <div id="debug-status"></div>
+            </div>
+        </div>
+        
+        <div class="revolver">
+            <div class="cylinder" id="cylinder">
+                <div class="chamber-indicator"></div>
+                <div class="chamber-position" style="transform: rotate(0deg) translate(60px) rotate(0deg);">1</div>
+                <div class="chamber-position" style="transform: rotate(60deg) translate(60px) rotate(-60deg);">2</div>
+                <div class="chamber-position" style="transform: rotate(120deg) translate(60px) rotate(-120deg);">3</div>
+                <div class="chamber-position" style="transform: rotate(180deg) translate(60px) rotate(-180deg);">4</div>
+                <div class="chamber-position" style="transform: rotate(240deg) translate(60px) rotate(-240deg);">5</div>
+                <div class="chamber-position" style="transform: rotate(300deg) translate(60px) rotate(-300deg);">6</div>
+            </div>
+        </div>
+        
+        <div id="messages">GAME START 버튼을 눌러주세요</div>
+
+        <div class="death-scores">
+            <div class="score player-score">
+                <div>플레이어</div>
+                <div class="score-value" id="player-death-score">0</div>
+            </div>
+            <div class="score computer-score">
+                <div>컴퓨터</div>
+                <div class="score-value" id="opponent-death-score">0</div>
+            </div>
+        </div>
+        
+        <div class="button-container">
+            <button id="start-button">Game Start</button>
+            <button id="fire-button">Fire</button>
+            <button id="spin-button">Spin</button>
+        </div>
+        
+        <button id="reset-death-counts">Reset Scores</button>
+    </div>
+
+	<div><a href="https://githubkorean.github.io/101-Game/">101 게임 하러 가기</a></div>
+
+    <!-- 오디오 요소 -->
+    <audio id="fire-sound" src="Shot.mp3"></audio>
+    <audio id="start-sound" src="Spin.mp3"></audio>
+    <audio id="click-sound" src="Empty.mp3"></audio>
+    <audio id="bg-music" loop src="SoundHelix-Song-1.mp3"></audio>
+
+    <script>
+        // DOM 요소
+        const statusDiv = document.getElementById('status');
+        const debugStatusDiv = document.getElementById('debug-status');
+        const messagesDiv = document.getElementById('messages');
+        const fireButton = document.getElementById('fire-button');
+        const spinButton = document.getElementById('spin-button');
+        const startButton = document.getElementById('start-button');
+        const fireSound = document.getElementById('fire-sound');
+        const startSound = document.getElementById('start-sound');
+        const clickSound = document.getElementById('click-sound');
+        const bgMusic = document.getElementById('bg-music');
+        const playerDeathScoreDiv = document.getElementById('player-death-score');
+        const opponentDeathScoreDiv = document.getElementById('opponent-death-score');
+        const resetDeathCountsButton = document.getElementById('reset-death-counts');
+        const cylinder = document.getElementById('cylinder');
+        const musicToggle = document.getElementById('musicToggle');
+        const startOverlay = document.getElementById('startOverlay');
+
+        // 게임 변수
+        let bulletPosition;
+        let currentShot;
+        let currentPlayer;
+        let mySpinUsedInGame;
+        let opponentSpinUsedInGame;
+        let isDebugMode = false;
+        let audioInitialized = false;
+
+        // 로컬스토리지에서 죽음 횟수 불러오기
+        let playerDeathCount = parseInt(localStorage.getItem('playerDeathCount')) || 0;
+        let opponentDeathCount = parseInt(localStorage.getItem('opponentDeathCount')) || 0;
+
+        // 게임 설정
+        const restartDelay = 3000;
+        const aiThinkDelayMax = 3000;
+        const aiSpinChance = 0.4;
+        const aiFireAfterSpinDelay = 1000;
+
+        // 사운드 재생 함수
+        function playSound(audioElement) {
+            if (audioElement && audioElement.src && audioElement.src !== window.location.href + '#' && audioElement.src !== 'about:blank') {
+                audioElement.currentTime = 0;
+                audioElement.play().catch(e => {
+                    if (e.name !== "NotAllowedError") {
+                        console.error("사운드 재생 오류:", e);
+                    }
+                });
+            }
+        }
+
+        // 오디오 초기화
+        function initAudio() {
+            if (audioInitialized) return;
+            
+            bgMusic.volume = 0.3;
+            playSound(bgMusic);
+            audioInitialized = true;
+        }
+
+        // 게임 초기화
+        function initGame() {
+            bulletPosition = Math.floor(Math.random() * 6) + 1;
+            currentShot = 0;
+            currentPlayer = Math.random() < 0.5 ? '플레이어' : '컴퓨터';
+            mySpinUsedInGame = false;
+            opponentSpinUsedInGame = false;
+
+            messagesDiv.textContent = '';
+            fireButton.disabled = false;
+            spinButton.disabled = false;
+
+            updateStatus();
+            updateChamberDisplay();
+
+            if (currentPlayer === '컴퓨터') {
+                handleOpponentTurn();
+            }
+        }
+
+        // 상태 업데이트
+        function updateStatus() {
+            statusDiv.textContent = `챔버: ${currentShot + 1} (${currentPlayer})`;
+
+            if (isDebugMode) {
+                debugStatusDiv.textContent = `(Debug: ${bulletPosition}) | Fire: ${currentShot + 1}/${bulletPosition}`;
+                resetDeathCountsButton.style.display = 'inline-block';
+            } else {
+                debugStatusDiv.textContent = '';
+                resetDeathCountsButton.style.display = 'none';
+            }
+
+            if (currentPlayer === '플레이어') {
+                fireButton.disabled = false;
+                spinButton.disabled = mySpinUsedInGame || currentShot >= 5;
+                messagesDiv.textContent = '당신의 차례입니다';
+            } else {
+                fireButton.disabled = true;
+                spinButton.disabled = true;
+            }
+        }
+
+        // 실린더 표시 업데이트
+        function updateChamberDisplay() {
+            const chambers = document.querySelectorAll('.chamber-position');
+            chambers.forEach((chamber, index) => {
+                chamber.classList.remove('active');
+                if (index + 1 === bulletPosition) {
+                    chamber.classList.add('active');
+                }
+            });
+        }
+
+        // 게임 종료 처리
+        function endGame(message, winner) {
+            messagesDiv.textContent = message;
+            fireButton.disabled = true;
+            spinButton.disabled = true;
+
+            // 승자에 따라 사망 횟수 업데이트
+            if (winner === '플레이어') {
+                opponentDeathCount++;
+                opponentDeathScoreDiv.textContent = opponentDeathCount;
+                localStorage.setItem('opponentDeathCount', opponentDeathCount);
+            } else {
+                playerDeathCount++;
+                playerDeathScoreDiv.textContent = playerDeathCount;
+                localStorage.setItem('playerDeathCount', playerDeathCount);
+            }
+
+            setTimeout(initGame, restartDelay);
+        }
+
+        // 발사 동작
+        function performFire() {
+            currentShot++;
+            cylinder.classList.add('shake');
+            setTimeout(() => cylinder.classList.remove('shake'), 500);
+
+            if (isDebugMode) {
+                debugStatusDiv.textContent = `(Debug: ${bulletPosition}) | Fire: ${currentShot}/${bulletPosition}`;
+            } else {
+                debugStatusDiv.textContent = '';
+            }
+
+            if (currentShot === bulletPosition) {
+                playSound(fireSound);
+                endGame(`${currentPlayer} 사망! ${restartDelay / 1000}초 후 새 게임 시작`, currentPlayer === '플레이어' ? '컴퓨터' : '플레이어');
+            } else {
+                playSound(clickSound);
+                if (currentShot >= 6) {
+                    endGame(`${currentPlayer} 생존! ${restartDelay / 1000}초 후 새 게임 시작`, currentPlayer);
+                } else {
+                    currentPlayer = currentPlayer === '플레이어' ? '컴퓨터' : '플레이어';
+                    updateStatus();
+
+                    if (currentPlayer === '컴퓨터') {
+                        handleOpponentTurn();
+                    }
+                }
+            }
+            
+            updateChamberDisplay();
+        }
+
+        // 실린더 회전
+        function performSpin() {
+            const currentSpinUsed = currentPlayer === '플레이어' ? mySpinUsedInGame : opponentSpinUsedInGame;
+
+            if (currentSpinUsed) {
+                if (currentPlayer === '플레이어') {
+                    messagesDiv.textContent = `${currentPlayer}은(는) 게임당 스핀 기회를 이미 사용했습니다.`;
+                }
+                return;
+            }
+
+            let spinRange;
+            if (currentShot >= 3) {
+                spinRange = 6;
+            } else if (currentShot === 2) {
+                spinRange = 5;
+            } else if (currentShot === 1) {
+                spinRange = 4;
+            } else if (currentShot === 0) {
+                spinRange = 3;
+            } else {
+                spinRange = 0;
+            }
+
+            if (spinRange === 0) {
+                messagesDiv.textContent = "스핀을 할 수 없습니다.";
+                return;
+            }
+
+            bulletPosition = Math.floor(Math.random() * spinRange) + (7 - spinRange);
+
+            if (bulletPosition <= currentShot) {
+                bulletPosition = currentShot + 1;
+            }
+
+            messagesDiv.textContent = `${currentPlayer}가 실린더를 돌렸습니다.`;
+            cylinder.classList.add('spinning');
+            setTimeout(() => cylinder.classList.remove('spinning'), 500);
+
+            playSound(startSound);
+
+            if (currentPlayer === '플레이어') {
+                mySpinUsedInGame = true;
+            } else {
+                opponentSpinUsedInGame = true;
+            }
+
+            updateStatus();
+            updateChamberDisplay();
+
+            if (currentPlayer === '컴퓨터') {
+                setTimeout(performFire, aiFireAfterSpinDelay);
+            }
+        }
+
+        // 컴퓨터 턴 처리
+        function handleOpponentTurn() {
+            messagesDiv.textContent = `컴퓨터가 생각 중...`;
+
+            const thinkDelay = Math.random() * aiThinkDelayMax;
+
+            setTimeout(() => {
+                let aiDecision;
+                const canSpin = !opponentSpinUsedInGame && currentShot < 6;
+
+                if (currentShot >= 5) {
+                    aiDecision = 'fire';
+                } else if (canSpin && Math.random() < aiSpinChance) {
+                    aiDecision = 'spin';
+                } else {
+                    aiDecision = 'fire';
+                }
+
+                if (aiDecision === 'spin' && currentShot < 6) {
+                    performSpin();
+                } else {
+                    performFire();
+                }
+            }, thinkDelay);
+        }
+
+        // 이벤트 리스너
+        startButton.addEventListener('click', () => {
+            startButton.style.display = 'none';
+            fireButton.style.display = 'inline-block';
+            spinButton.style.display = 'inline-block';
+
+            fireButton.disabled = false;
+            spinButton.disabled = false;
+
+            initGame();
+        });
+
+        fireButton.addEventListener('click', () => {
+            if (currentPlayer === '플레이어' && !fireButton.disabled) {
+                performFire();
+            } else if (currentPlayer === '컴퓨터') {
+                messagesDiv.textContent = '상대 턴입니다. 기다려 주세요.';
+            }
+        });
+
+        spinButton.addEventListener('click', () => {
+            if (currentPlayer === '플레이어' && !spinButton.disabled) {
+                performSpin();
+            } else if (currentPlayer === '컴퓨터') {
+                messagesDiv.textContent = '상대 턴입니다. 기다려 주세요.';
+            }
+        });
+
+        // 음악 토글
+        musicToggle.addEventListener('click', function() {
+            this.classList.toggle('active');
+            if (this.classList.contains('active')) {
+                bgMusic.play();
+            } else {
+                bgMusic.pause();
+            }
+        });
+
+        // 게임 시작 오버레이 클릭 이벤트
+        startOverlay.addEventListener('click', () => {
+            startOverlay.style.display = 'none';
+            initAudio(); // 오디오 초기화
+            playSound(startSound); // 시작 효과음 재생
+        });
+
+        // 디버그 모드 토글 (Pause 키)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Pause' && bulletPosition !== undefined) {
+                isDebugMode = !isDebugMode;
+                updateStatus();
+            }
+        });
+
+        // 죽음 횟수 초기화
+        resetDeathCountsButton.addEventListener('click', () => {
+            playerDeathCount = 0;
+            opponentDeathCount = 0;
+            localStorage.setItem('playerDeathCount', playerDeathCount);
+            localStorage.setItem('opponentDeathCount', opponentDeathCount);
+
+            playerDeathScoreDiv.textContent = playerDeathCount;
+            opponentDeathScoreDiv.textContent = opponentDeathCount;
+        });
+
+        // 초기화
+        playerDeathScoreDiv.textContent = playerDeathCount;
+        opponentDeathScoreDiv.textContent = opponentDeathCount;
+    </script>
+</body>
+</html>
