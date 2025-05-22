@@ -200,8 +200,8 @@
         <textarea id="codeInput" placeholder="여기에 HTML/CSS 코드를 입력하세요..."></textarea>
         
         <div class="button-group">
-            <button onclick="generatePopup()" class="btn-run">
-                <i class="fas fa-external-link-alt"></i> 새 창에서 실행
+            <button onclick="runInNewTab()" class="btn-run">
+                <i class="fas fa-external-link-alt"></i> 코드 테스트
             </button>
             <button onclick="previewInPage()" class="btn-preview">
                 <i class="fas fa-eye"></i> 미리보기
@@ -230,10 +230,10 @@
             <div class="settings-title"><i class="fas fa-cog"></i> 설정</div>
             <div class="checkbox-group">
                 <input type="checkbox" id="clearAfterCopy">
-                <label for="clearAfterCopy">복사 후 HTML 코드 비우기</label>
+                <label for="clearAfterCopy">복사 후 코드 비우기</label>
             </div>
             <div class="checkbox-group">
-                <label for="autoSaveInterval">HTML 코드 자동 저장:</label>
+                <label for="autoSaveInterval">자동 저장 주기:</label>
                 <select id="autoSaveInterval">
                     <option value="0" selected>사용 안함</option>
                     <option value="5">5초</option>
@@ -256,7 +256,7 @@
     </div>
     
     <div class="footer">
-        v1.0 - 실행한 코드는 브라우저에 자동으로 저장됩니다.
+        v1.4 - 실행한 코드는 브라우저에 자동으로 저장됩니다.
     </div>
 
     <script>
@@ -297,6 +297,29 @@
             });
         });
         
+        // 새 탭에서 실행
+        function runInNewTab() {
+            const code = document.getElementById("codeInput").value;
+            saveCode();
+            const newWindow = window.open('about:blank', '_blank');
+            newWindow.document.open();
+            newWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>코드 테스트 결과</title>
+                    <style>
+                        body { margin: 20px; font-family: Arial, sans-serif; }
+                    </style>
+                </head>
+                <body>
+                    ${code}
+                </body>
+                </html>
+            `);
+            newWindow.document.close();
+        }
+        
         // 변경된 내용이 있을 때만 저장
         function saveCodeIfChanged() {
             const currentContent = document.getElementById("codeInput").value;
@@ -328,14 +351,6 @@
             const code = document.getElementById("codeInput").value;
             localStorage.setItem("savedCode", code);
             lastSavedContent = code;
-        }
-        
-        // 새 창에서 코드 실행
-        function generatePopup() {
-            const code = document.getElementById("codeInput").value;
-            saveCode();
-            const popupWindow = window.open("", "_blank", "width=600,height=400");
-            popupWindow.document.write(code);
         }
         
         // 현재 페이지에서 미리보기 (iframe 사용)
