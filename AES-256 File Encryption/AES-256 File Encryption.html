@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 암호화/복호화 (AES-256)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: #f9f9f9; padding: 20px; border-radius: 8px; }
+        h1 { text-align: center; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="file"], input[type="password"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box; /* 패딩이 너비에 포함되도록 설정 */
+        }
+        button {
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #eee;
+            min-height: 20px;
+            white-space: pre-wrap; /* 상태 메시지 줄바꿈 유지 */
+            word-wrap: break-word;
+        }
+        .download-link {
+            display: block;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .download-link a {
+            display: inline-block;
+            background-color: #0275d8;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .download-link a:hover {
+            background-color: #025aa5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>파일 암호화/복호화</h1>
+
+    <div class="form-group">
+        <label for="fileInput">파일 선택:</label>
+        <input type="file" id="fileInput">
+    </div>
+
+    <div class="form-group">
+        <label for="passwordInput">비밀번호 입력:</label>
+        <input type="password" id="passwordInput">
+    </div>
+
+    <button id="encryptButton">파일 암호화</button>
+    <button id="decryptButton">파일 복호화</button>
+
+    <div class="status" id="statusArea">상태 메시지</div>
+
+    <div class="download-link" id="downloadLinkArea" style="display: none;">
+        <a id="downloadLink" href="#" download></a>
+    </div>
+</div>
+
+<script>
+    const fileInput = document.getElementById('fileInput');
+    const passwordInput = document.getElementById('passwordInput');
+    const encryptButton = document.getElementById('encryptButton');
+    const decryptButton = document.getElementById('decryptButton');
+    const statusArea = document.getElementById('statusArea');
+    const downloadLinkArea = document.getElementById('downloadLinkArea');
+    const downloadLink = document.getElementById('downloadLink');
+
+    // ArrayBuffer를 WordArray로 변환하는 헬퍼 함수
+    function arrayBufferToWordArray(ab) {
+        const byteArray = new Uint8Array(ab);
+        const wordArray = CryptoJS.lib.WordArray.create(byteArray);
+        return wordArray;
+    }
+
+    // WordArray를 Blob으로 변환하는 헬퍼 함수
+    function wordArrayToBlob(wordArray, mimeType) {
+        const len = wordArray.sigBytes;
+        const words = wordArray.words;
+        const byteArray = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            byteArray[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+        }
+        return new Blob([byteArray], { type: mimeType });
+    }
+
+    // 상태 메시지 업데이트 함수
+    function updateStatus(message) {
+        statusArea.textContent = message;
+    }
+
+    // 다운로드 링크 설정 함수
+    function setDownloadLink(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        downloadLink.href = url;
+        downloadLink.download = filename;
+        downloadLink.textContent = `${filename} 다운로드`;
+        downloadLinkArea.style.display = 'block';
+
+        // Blob URL 메모리 해제를 위해 일정 시간 후 해제
+        // 또는 링크 클릭 후 해제
+        downloadLink.onclick = () => {
+             setTimeout(() => URL.revokeObjectURL(url), 1000);
+        };
+    }
+
+    // 암호화 처리 함수
+    encryptButton.addEventListener('click', () => {
+        const file = fileInput.files[0];
+        const password = passwordInput.value;
+
+        if (!file) {
+            updateStatus('파일을 선택해주세요.');
+            return;
+        }
+        if (!password) {
+            updateStatus('비밀번호를 입력해주세요.');
+            return;
+        }
+
+        updateStatus('파일을 읽는 중...');
+        downloadLinkArea.style.display = 'none';
+
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            try {
+                const arrayBuffer = event.target.result;
+                const wordArray = arrayBufferToWordArray(arrayBuffer);
+
+                updateStatus('파일 암호화 중...');
+                // CryptoJS는 password 기반 키 유도 함수(PBKDF2)를 내부적으로 사용합니다.
+                const encrypted = CryptoJS.AES.encrypt(wordArray, password);
+
+                // 암호화 결과는 WordArray 형태이며, 이를 문자열로 변환하여 저장합니다.
+                // 이 문자열은 Salt, IV, Ciphertext를 포함하는 특정 포맷입니다.
+                const encryptedString = encrypted.toString();
+
+                const blob = new Blob([encryptedString], { type: 'text/plain' }); // 암호화 결과는 텍스트 형태로 저장
+                const encryptedFilename = file.name + '.encrypted';
+                setDownloadLink(blob, encryptedFilename);
+                updateStatus('파일 암호화 완료. 다운로드 링크를 클릭하세요.');
+
+            } catch (e) {
+                updateStatus(`암호화 중 오류 발생: ${e.message}`);
+                console.error(e);
+            }
+        };
+
+        reader.onerror = function() {
+            updateStatus('파일 읽기 오류가 발생했습니다.');
+        };
+
+        // 파일을 ArrayBuffer 형태로 읽습니다.
+        reader.readAsArrayBuffer(file);
+    });
+
+    // 복호화 처리 함수
+    decryptButton.addEventListener('click', () => {
+        const file = fileInput.files[0];
+        const password = passwordInput.value;
+
+        if (!file) {
+            updateStatus('파일을 선택해주세요.');
+            return;
+        }
+        if (!password) {
+            updateStatus('비밀번호를 입력해주세요.');
+            return;
+        }
+
+        updateStatus('암호화된 파일을 읽는 중...');
+        downloadLinkArea.style.display = 'none';
+
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            try {
+                const encryptedString = event.target.result;
+
+                updateStatus('파일 복호화 중...');
+                 // 암호화된 문자열과 비밀번호를 사용하여 복호화합니다.
+                const decrypted = CryptoJS.AES.decrypt(encryptedString, password);
+
+                // WordArray를 원래의 바이너리 데이터 Blob으로 변환합니다.
+                // 원본 파일의 MIME 타입을 알 수 없으므로 기본값 사용
+                const decryptedBlob = wordArrayToBlob(decrypted, 'application/octet-stream');
+
+                // 파일 이름에서 .encrypted 확장자를 제거합니다.
+                const originalFilename = file.name.endsWith('.encrypted') ?
+                                         file.name.slice(0, -('.encrypted'.length)) :
+                                         'decrypted_file'; // .encrypted 확장자가 없으면 기본 이름 사용
+
+                setDownloadLink(decryptedBlob, originalFilename);
+                updateStatus("복호화가 완료되었습니다. 복구된 파일을 열어 정상적으로 복구되었는지 확인하세요.")
+
+            } catch (e) {
+                updateStatus(`복호화 중 오류 발생: ${e.message}`);
+                 console.error(e);
+            }
+        };
+
+        reader.onerror = function() {
+            updateStatus('파일 읽기 오류가 발생했습니다.');
+        };
+
+        // 암호화된 파일은 텍스트 형태로 저장되었으므로 텍스트로 읽습니다.
+        reader.readAsText(file);
+    });
+
+</script>
+
+</body>
+</html>
