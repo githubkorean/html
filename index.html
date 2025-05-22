@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>로딩 중...</title>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      // URL에서 파라미터 추출 (예: ?test/test.html)
+      const urlParams = new URLSearchParams(window.location.search);
+      const htmlPath = urlParams.keys().next().value; // 첫 번째 파라미터 키 추출
+      
+      // 로드할 HTML 경로 결정 (파라미터 없으면 404.html)
+      const loadPath = htmlPath ? htmlPath : '404.html';
+      
+      fetch(loadPath)
+        .then(res => {
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          return res.text();
+        })
+        .then(html => {
+          document.open();
+          document.write(html);
+          document.close();
+        })
+        .catch(err => {
+          console.error('로드 실패:', err);
+          // 404.html 로드도 실패한 경우 기본 메시지 표시
+          document.body.innerHTML = `
+            <h1>페이지를 찾을 수 없습니다</h1>
+            <p>요청한 리소스 (${loadPath})를 로드할 수 없습니다.</p>
+            <p>${err.message}</p>
+          `;
+        });
+    });
+  </script>
+</head>
+<body>
+  <div style="text-align: center; margin-top: 50px;">
+    <p>페이지 로드 중...</p>
+    <progress></progress>
+  </div>
+</body>
+</html>
