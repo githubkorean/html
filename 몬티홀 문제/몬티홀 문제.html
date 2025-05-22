@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>몬티홀 문제</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+        }
+
+        .container {
+            background-color: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 90%;
+            margin: 20px auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .doors-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+
+        .door {
+            width: 120px;
+            height: 200px;
+            background: linear-gradient(145deg, #8e2de2, #4a00e0);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .door:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .door-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+            position: absolute;
+            top: 10px;
+        }
+
+        .door-content {
+            font-size: 3rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .door.selected {
+            background: linear-gradient(145deg, #ff8a00, #e52e71);
+            transform: scale(1.05);
+        }
+
+        .door.revealed {
+            background: linear-gradient(145deg, #f12711, #f5af19);
+        }
+
+        .door.winner .door-content {
+            color: #4cff00;
+            text-shadow: 0 0 10px rgba(76, 255, 0, 0.7);
+        }
+
+        .door.loser .door-content {
+            color: #ff0000;
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+
+        .message {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            min-height: 50px;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .stat-box {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .share-btn {
+            padding: 12px 24px;
+            font-size: 1.1rem;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            background: linear-gradient(to right, #FF416C, #FF4B2B);
+            color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .share-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .share-btn:active {
+            transform: translateY(1px);
+        }
+
+        .confirm-dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 100;
+            text-align: center;
+        }
+
+        .confirm-dialog button {
+            padding: 8px 16px;
+            margin: 10px 5px 0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .tooltip {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            z-index: 1000;
+            max-width: 80%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+
+        .tooltip-close {
+            margin-top: 10px;
+            padding: 5px 15px;
+            background: #FF416C;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>몬티홀 문제</h1>
+        
+        <div class="doors-container" id="doorsContainer">
+            <div class="door" data-door="1">
+                <div class="door-number">1</div>
+                <div class="door-content"></div>
+            </div>
+            <div class="door" data-door="2">
+                <div class="door-number">2</div>
+                <div class="door-content"></div>
+            </div>
+            <div class="door" data-door="3">
+                <div class="door-number">3</div>
+                <div class="door-content"></div>
+            </div>
+        </div>
+
+        <div class="message" id="message">문을 선택해주세요</div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-value" id="stayWins">0</div>
+                <div class="stat-label">바꾸지 않고 승리</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="switchWins">0</div>
+                <div class="stat-label">바꾸고 승리</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value" id="totalGames">0</div>
+                <div class="stat-label">총 게임 수</div>
+            </div>
+        </div>
+
+        <button class="share-btn" id="shareBtn">📢 스코어 공유하기</button>
+    </div>
+
+    <div class="confirm-dialog" id="confirmDialog">
+        <div id="confirmMessage">정말 이 문을 선택하시겠습니까?</div>
+        <button id="confirmYes">예</button>
+        <button id="confirmNo">아니오</button>
+    </div>
+
+    <div class="tooltip" id="shareTooltip">
+        <div id="tooltipMessage">링크가 클립보드에 복사되었습니다!</div>
+        <button class="tooltip-close" id="tooltipClose">닫기</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM 요소
+            const doors = document.querySelectorAll('.door');
+            const messageEl = document.getElementById('message');
+            const shareBtn = document.getElementById('shareBtn');
+            const stayWinsEl = document.getElementById('stayWins');
+            const switchWinsEl = document.getElementById('switchWins');
+            const totalGamesEl = document.getElementById('totalGames');
+            const confirmDialog = document.getElementById('confirmDialog');
+            const confirmMessage = document.getElementById('confirmMessage');
+            const confirmYes = document.getElementById('confirmYes');
+            const confirmNo = document.getElementById('confirmNo');
+            const shareTooltip = document.getElementById('shareTooltip');
+            const tooltipMessage = document.getElementById('tooltipMessage');
+            const tooltipClose = document.getElementById('tooltipClose');
+
+            // 게임 상태 변수
+            let gameState = 'initial';
+            let prizeDoor, selectedDoor, revealedDoor;
+            let stayWins = 0, switchWins = 0, totalGames = 0;
+            let finalChoice = null;
+
+            // URL에서 스코어 로드
+            function loadFromURL() {
+                const params = new URLSearchParams(window.location.search);
+                stayWins = parseInt(params.get('stay')) || 0;
+                switchWins = parseInt(params.get('switch')) || 0;
+                totalGames = parseInt(params.get('total')) || 0;
+                updateStats();
+            }
+
+            // URL 업데이트
+            function updateURL() {
+                const params = new URLSearchParams();
+                params.set('stay', stayWins);
+                params.set('switch', switchWins);
+                params.set('total', totalGames);
+                window.history.replaceState(null, '', '?' + params.toString());
+            }
+
+            // 게임 초기화
+            function initGame() {
+                doors.forEach(door => {
+                    door.classList.remove('selected', 'revealed', 'winner', 'loser');
+                    const content = door.querySelector('.door-content');
+                    content.textContent = '';
+                    content.style.opacity = '0';
+                });
+
+                prizeDoor = Math.floor(Math.random() * 3) + 1;
+                gameState = 'initial';
+                selectedDoor = null;
+                revealedDoor = null;
+                finalChoice = null;
+
+                messageEl.textContent = '문을 선택해주세요';
+            }
+
+            // 문 클릭 이벤트
+            doors.forEach(door => {
+                door.addEventListener('click', function() {
+                    const doorNum = parseInt(this.dataset.door);
+                    
+                    if (gameState === 'initial') {
+                        selectedDoor = doorNum;
+                        this.classList.add('selected');
+                        gameState = 'selected';
+                        setTimeout(() => revealGoatDoor(), 500);
+                    } else if (gameState === 'revealed') {
+                        if (this.classList.contains('revealed')) return;
+                        
+                        finalChoice = doorNum;
+                        const isSwitching = finalChoice !== selectedDoor;
+                        confirmMessage.textContent = isSwitching 
+                            ? `문 ${selectedDoor} 대신 문 ${finalChoice}을 선택하시겠습니까?` 
+                            : `문 ${selectedDoor}을 계속 선택하시겠습니까?`;
+                        confirmDialog.style.display = 'block';
+                    } else if (gameState === 'final') {
+                        initGame();
+                    }
+                });
+            });
+
+            // 사회자가 문 열기
+            function revealGoatDoor() {
+                const availableDoors = [1, 2, 3].filter(num => 
+                    num !== selectedDoor && num !== prizeDoor
+                );
+                revealedDoor = availableDoors[Math.floor(Math.random() * availableDoors.length)];
+                
+                const revealedDoorEl = document.querySelector(`.door[data-door="${revealedDoor}"]`);
+                revealedDoorEl.classList.add('revealed');
+                const content = revealedDoorEl.querySelector('.door-content');
+                content.textContent = '🐐';
+                content.style.opacity = '1';
+                
+                gameState = 'revealed';
+                messageEl.textContent = `문 ${revealedDoor} 뒤에는 염소가 있습니다. 기존 선택을 유지하거나 다른 문을 선택하세요.`;
+            }
+
+            // 최종 결과 처리
+            function confirmFinalChoice() {
+                const isWinner = finalChoice === prizeDoor;
+                const isSwitching = finalChoice !== selectedDoor;
+                
+                totalGames++;
+                if (isWinner) {
+                    if (isSwitching) switchWins++;
+                    else stayWins++;
+                }
+                
+                doors.forEach(door => {
+                    const doorNum = parseInt(door.dataset.door);
+                    const content = door.querySelector('.door-content');
+                    
+                    if (doorNum === prizeDoor) {
+                        content.textContent = '🏆';
+                        if (doorNum === finalChoice) door.classList.add('winner');
+                    } else {
+                        content.textContent = '🐐';
+                        if (doorNum === finalChoice) door.classList.add('loser');
+                    }
+                    content.style.opacity = '1';
+                });
+                
+                updateStats();
+                updateURL();
+                gameState = 'final';
+                
+                messageEl.textContent = isWinner 
+                    ? `축하합니다! 문 ${finalChoice} 뒤에 상품이 있습니다! (${isSwitching ? '바꿈' : '바꾸지 않음'})`
+                    : `아쉽습니다! 문 ${finalChoice} 뒤에는 염소가 있습니다. (${isSwitching ? '바꿈' : '바꾸지 않음'})`;
+            }
+
+            // 확인 다이얼로그
+            confirmYes.addEventListener('click', function() {
+                confirmDialog.style.display = 'none';
+                confirmFinalChoice();
+            });
+
+            confirmNo.addEventListener('click', function() {
+                confirmDialog.style.display = 'none';
+                finalChoice = null;
+            });
+
+            // 툴팁 표시 함수
+            function showTooltip(message) {
+                tooltipMessage.innerHTML = message.replace(/\n/g, '<br>');
+                shareTooltip.style.display = 'block';
+                
+                // 3초 후 자동으로 닫기
+                setTimeout(() => {
+                    shareTooltip.style.display = 'none';
+                }, 3000);
+            }
+            
+            // 툴팁 닫기
+            tooltipClose.addEventListener('click', function() {
+                shareTooltip.style.display = 'none';
+            });
+
+            // 공유 기능 구현
+            shareBtn.addEventListener('click', async function() {
+                const shareData = {
+                    title: '몬티홀 문제 스코어',
+                    text: `바꾸지 않음 승리: ${stayWins}회\n바꿈 승리: ${switchWins}회\n총 게임: ${totalGames}회`,
+                    url: window.location.href
+                };
+                
+                try {
+                    // 1. Web Share API 시도 (모바일 및 지원 브라우저)
+                    if (navigator.share) {
+                        await navigator.share(shareData);
+                        return;
+                    }
+                    
+                    // 2. 클립보드 복사 시도
+                    try {
+                        await navigator.clipboard.writeText(
+                            `몬티홀 문제 스코어\n` +
+                            `바꾸지 않음 승리: ${stayWins}회\n` +
+                            `바꿈 승리: ${switchWins}회\n` +
+                            `총 게임: ${totalGames}회\n` +
+                            `링크: ${window.location.href}`
+                        );
+                        showTooltip('✅ 링크가 클립보드에 복사되었습니다!');
+                        return;
+                    } catch (clipboardErr) {
+                        console.log('클립보드 복사 실패:', clipboardErr);
+                    }
+                    
+                    // 3. prompt로 URL 보여주기 (최후의 수단)
+                    const shareText = `공유할 내용:\n바꾸지 않음 승리: ${stayWins}회\n바꿈 승리: ${switchWins}회\n총 게임: ${totalGames}회\n\n아래 URL을 복사해주세요:`;
+                    prompt(shareText, window.location.href);
+                    
+                } catch (err) {
+                    console.log('공유 실패:', err);
+                    showTooltip('⚠️ 공유 기능을 지원하지 않는 브라우저입니다.<br>URL을 수동으로 복사해주세요.');
+                }
+            });
+
+            // 통계 업데이트
+            function updateStats() {
+                stayWinsEl.textContent = stayWins;
+                switchWinsEl.textContent = switchWins;
+                totalGamesEl.textContent = totalGames;
+            }
+
+            // 초기 실행
+            loadFromURL();
+            initGame();
+        });
+    </script>
+</body>
+</html>
