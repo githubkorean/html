@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Editor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/prettier@2.7.1/standalone.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prettier@2.7.1/parser-html.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prettier@2.7.1/parser-css.min.js"></script>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #9b59b6;
+            --success: #2ecc71;
+            --warning: #e67e22;
+            --danger: #e74c3c;
+            --dark: #34495e;
+            --light: #ecf0f1;
+            --format: #89C4F4;
+            --import: #BE90D4;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        #codeInput {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 120px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        button i {
+            font-size: 14px;
+        }
+        
+        .btn-run { background-color: var(--primary); }
+        .btn-preview { background-color: var(--secondary); }
+        .btn-copy { background-color: var(--success); }
+        .btn-save { background-color: var(--warning); }
+        .btn-clear { background-color: var(--danger); }
+        .btn-close { background-color: var(--dark); }
+        .btn-format { background-color: var(--format); color: #333; }
+        .btn-load { background-color: var(--import); color: #333; }
+        
+        .btn-run:hover { background-color: #2980b9; }
+        .btn-preview:hover { background-color: #8e44ad; }
+        .btn-copy:hover { background-color: #27ae60; }
+        .btn-save:hover { background-color: #d35400; }
+        .btn-clear:hover { background-color: #c0392b; }
+        .btn-close:hover { background-color: #2c3e50; }
+        .btn-format:hover { background-color: #6BB9F0; }
+        .btn-load:hover { background-color: #AF7AC5; }
+        
+        .footer {
+            margin-top: 20px;
+            color: #7f8c8d;
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #2c3e50;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            gap: 8px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--success);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        .settings-group {
+            margin: 15px 0;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .settings-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        
+        #previewFrame {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: white;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleDarkMode()">🌓</button>
+    <div class="notification" id="notification"></div>
+    
+    <h1>HTML Editor</h1>
+    
+    <div class="container">
+        <textarea id="codeInput" placeholder="여기에 HTML/CSS 코드를 입력하세요..."></textarea>
+        
+        <div class="button-group">
+            <button onclick="generatePopup()" class="btn-run">
+                <i class="fas fa-external-link-alt"></i> 새 창에서 실행
+            </button>
+            <button onclick="previewInPage()" class="btn-preview">
+                <i class="fas fa-eye"></i> 미리보기
+            </button>
+            <button onclick="formatCode()" class="btn-format">
+                <i class="fas fa-indent"></i> 포맷팅
+            </button>
+        </div>
+        
+        <div class="button-group">
+            <button onclick="copyCode()" class="btn-copy">
+                <i class="far fa-copy"></i> 코드 복사
+            </button>
+            <button onclick="exportToTxt()" class="btn-save">
+                <i class="fas fa-file-export"></i> 파일 저장
+            </button>
+            <button onclick="document.getElementById('fileInput').click()" class="btn-load">
+                <i class="fas fa-file-import"></i> 파일 불러오기
+            </button>
+            <button onclick="clearCode()" class="btn-clear">
+                <i class="fas fa-trash-alt"></i> 지우기
+            </button>
+        </div>
+        
+        <div class="settings-group">
+            <div class="settings-title"><i class="fas fa-cog"></i> 설정</div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="clearAfterCopy">
+                <label for="clearAfterCopy">복사 후 HTML 코드 비우기</label>
+            </div>
+            <div class="checkbox-group">
+                <label for="autoSaveInterval">HTML 코드 자동 저장:</label>
+                <select id="autoSaveInterval">
+                    <option value="0" selected>사용 안함</option>
+                    <option value="5">5초</option>
+                    <option value="15">15초</option>
+                    <option value="30">30초</option>
+                    <option value="60">1분</option>
+                </select>
+            </div>
+        </div>
+        
+        <input type="file" id="fileInput" accept=".html,.htm,.txt" class="hidden">
+    </div>
+    
+    <div id="previewContainer" class="container" style="display: none;">
+        <h2><i class="fas fa-eye"></i> 미리보기</h2>
+        <iframe id="previewFrame" sandbox="allow-scripts"></iframe>
+        <button onclick="closePreview()" class="btn-close" style="margin-top: 15px;">
+            <i class="fas fa-times"></i> 닫기
+        </button>
+    </div>
+    
+    <div class="footer">
+        v1.0 - 실행한 코드는 브라우저에 자동으로 저장됩니다.
+    </div>
+
+    <script>
+        // 전역 변수
+        let autoSaveTimer = null;
+        let lastSavedContent = "";
+        
+        // DOM 로드 완료 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            // 저장된 코드 복원
+            const savedCode = localStorage.getItem("savedCode");
+            if (savedCode) {
+                document.getElementById("codeInput").value = savedCode;
+                lastSavedContent = savedCode;
+            }
+            
+            // 설정 복원
+            document.getElementById("clearAfterCopy").checked = 
+                localStorage.getItem("clearAfterCopy") === 'true';
+            
+            const savedInterval = localStorage.getItem("autoSaveInterval") || "0";
+            document.getElementById("autoSaveInterval").value = savedInterval;
+            setupAutoSave(parseInt(savedInterval));
+            
+            // 파일 입력 이벤트 설정
+            document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+            
+            // 설정 변경 감지
+            document.getElementById('autoSaveInterval').addEventListener('change', function() {
+                const interval = parseInt(this.value);
+                setupAutoSave(interval);
+                localStorage.setItem("autoSaveInterval", interval.toString());
+                showNotification(`자동 저장 ${interval > 0 ? '활성화 ('+interval+'초)' : '비활성화'}`);
+            });
+            
+            document.getElementById('clearAfterCopy').addEventListener('change', function() {
+                localStorage.setItem("clearAfterCopy", this.checked.toString());
+            });
+        });
+        
+        // 변경된 내용이 있을 때만 저장
+        function saveCodeIfChanged() {
+            const currentContent = document.getElementById("codeInput").value;
+            if (currentContent !== lastSavedContent) {
+                saveCode();
+                return true;
+            }
+            return false;
+        }
+        
+        // 자동 저장 설정
+        function setupAutoSave(interval) {
+            if (autoSaveTimer) {
+                clearInterval(autoSaveTimer);
+                autoSaveTimer = null;
+            }
+            
+            if (interval > 0) {
+                autoSaveTimer = setInterval(() => {
+                    if (saveCodeIfChanged()) {
+                        showNotification('자동 저장 완료');
+                    }
+                }, interval * 1000);
+            }
+        }
+        
+        // 코드 저장 (내용 비교 없이 무조건 저장)
+        function saveCode() {
+            const code = document.getElementById("codeInput").value;
+            localStorage.setItem("savedCode", code);
+            lastSavedContent = code;
+        }
+        
+        // 새 창에서 코드 실행
+        function generatePopup() {
+            const code = document.getElementById("codeInput").value;
+            saveCode();
+            const popupWindow = window.open("", "_blank", "width=600,height=400");
+            popupWindow.document.write(code);
+        }
+        
+        // 현재 페이지에서 미리보기 (iframe 사용)
+        function previewInPage() {
+            const code = document.getElementById("codeInput").value;
+            saveCode();
+            const previewFrame = document.getElementById("previewFrame");
+            previewFrame.srcdoc = code;
+            document.getElementById("previewContainer").style.display = "block";
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+        
+        // 미리보기 닫기
+        function closePreview() {
+            document.getElementById("previewContainer").style.display = "none";
+        }
+        
+        // 코드를 TXT 파일로 저장
+        function exportToTxt() {
+            const code = document.getElementById("codeInput").value;
+            const blob = new Blob([code], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'code_' + new Date().toISOString().slice(0, 10) + '.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // 코드 복사 기능
+        function copyCode() {
+            const codeInput = document.getElementById("codeInput");
+            codeInput.select();
+            document.execCommand('copy');
+            
+            showNotification('코드가 클립보드에 복사되었습니다!');
+            
+            if (document.getElementById("clearAfterCopy").checked) {
+                codeInput.value = "";
+                localStorage.removeItem("savedCode");
+                lastSavedContent = "";
+            }
+        }
+        
+        // 코드 지우기
+        function clearCode() {
+            if (confirm("정말 코드를 지우시겠습니까?")) {
+                document.getElementById("codeInput").value = "";
+                localStorage.removeItem("savedCode");
+                lastSavedContent = "";
+                showNotification('코드가 지워졌습니다');
+            }
+        }
+        
+        // 코드 포맷팅 (Prettier 사용)
+        function formatCode() {
+            const codeInput = document.getElementById("codeInput");
+            try {
+                const formattedCode = prettier.format(codeInput.value, {
+                    parser: "html",
+                    plugins: [prettierPlugins.html],
+                    tabWidth: 2,
+                    useTabs: false,
+                    htmlWhitespaceSensitivity: "ignore"
+                });
+                codeInput.value = formattedCode;
+                saveCode();
+                showNotification('코드가 포맷팅되었습니다');
+            } catch (error) {
+                showNotification('포맷팅 실패: ' + error.message, true);
+            }
+        }
+        
+        // 파일 업로드 처리
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById("codeInput").value = e.target.result;
+                saveCode();
+                showNotification('파일을 불러왔습니다: ' + file.name);
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+        
+        // 알림 표시
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById("notification");
+            notification.textContent = message;
+            notification.style.backgroundColor = isError ? 'var(--danger)' : 'var(--success)';
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+        
+        // 다크 모드 토글
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+        
+        // 페이지 로드 시 다크 모드 확인
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+        
+        // 다크 모드 스타일 추가
+        const style = document.createElement('style');
+        style.textContent = `
+            body.dark-mode {
+                background-color: #121212;
+                color: #e0e0e0;
+            }
+            
+            body.dark-mode .container {
+                background-color: #1e1e1e;
+                box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            }
+            
+            body.dark-mode #codeInput {
+                background-color: #2d2d2d;
+                color: #f0f0f0;
+                border-color: #444;
+            }
+            
+            body.dark-mode h1 {
+                color: #bb86fc;
+            }
+            
+            body.dark-mode .theme-toggle {
+                color: #bb86fc;
+            }
+            
+            body.dark-mode .checkbox-group label {
+                color: #e0e0e0;
+            }
+            
+            body.dark-mode .footer {
+                color: #aaaaaa;
+            }
+            
+            body.dark-mode .settings-group {
+                background-color: #2d2d2d;
+            }
+            
+            body.dark-mode select {
+                background-color: #2d2d2d;
+                color: #f0f0f0;
+                border-color: #444;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
