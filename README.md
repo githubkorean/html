@@ -19,3 +19,5 @@
 [화이트데이 체육창고 암호 해석](https://githubkorean.github.io/html/?체육창고%20계산/체육창고%20계산.html)
 
 [화이트데이 그리니치 문제 해석](https://githubkorean.github.io/html/?그리니치%20계산/그리니치%20계산.html)
+
+[화이트데이 그리니치 문제 해석](https://githubkorean.github.io/html/?그리니치%20계산/그리니치%20계산(버튼).html)
