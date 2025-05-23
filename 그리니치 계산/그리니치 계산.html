@@ -36,7 +36,7 @@
             box-shadow: var(--shadow);
             width: 100%;
             max-width: 400px;
-            margin-bottom: 20px; /* 푸터와의 간격 */
+            margin-bottom: 20px;
         }
         
         h1 {
@@ -186,7 +186,7 @@
         </div>
         
         <div class="btn-group">
-            <button class="btn" onclick="calculate()">시간 계산하기</button>
+            <button class="btn" onclick="calculate()" id="calculateBtn">시간 계산하기</button>
         </div>
         
         <div id="result" class="result-container">
@@ -231,9 +231,22 @@
         // 페이지 로드 시 설정값 불러오기
         window.onload = loadSetting;
         
+        // 엔터 키 입력 처리
+        document.getElementById('greenwich').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                calculate();
+            }
+        });
+        
         function calculate() {
             const greenwichInput = document.getElementById('greenwich');
             let greenwich = parseInt(greenwichInput.value);
+            
+            // 0시 입력 시 12시로 변환
+            if (greenwich === 0) {
+                greenwich = 12;
+                greenwichInput.value = 12; // 입력창 값도 12로 변경
+            }
             
             // 입력값 검증
             if (isNaN(greenwich) || greenwich < 0 || greenwich > 12) {
