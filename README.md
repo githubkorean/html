@@ -4,6 +4,8 @@
 
 [숫자 맞추기 게임](https://githubkorean.github.io/html/?2진법%20맞추기/2진법%20맞추기.html)
 
+[몬티홀 문제](https://githubkorean.github.io/html/?몬티홀%20문제/몬티홀%20문제.html)
+
 [101 게임](https://githubkorean.github.io/html/?101%20게임/101%20게임.html)
 
 [도구]
