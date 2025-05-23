@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화이트데이 그리니치 문제 해석</title>
+    <style>
+        :root {
+            --primary: #6C5CE7;
+            --secondary: #00CEFF;
+            --dark: #2D3436;
+            --light: #F5F6FA;
+            --card-bg: #FFFFFF;
+            --shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --button-size: 50px;
+            --border-radius: 12px;
+        }
+        
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        
+        .container {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            width: 100%;
+            max-width: 500px;
+            overflow: hidden; /* 내용이 넘치지 않도록 */
+        }
+        
+        .header {
+            padding: 25px 25px 15px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin: 0 0 10px;
+            font-size: 1.6rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #7F8C8D;
+            font-size: 0.9rem;
+            text-align: center;
+            margin: 0;
+        }
+        
+        .content {
+            padding: 20px 25px;
+        }
+        
+        .time-buttons {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 25px;
+        }
+        
+        .time-btn {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: var(--border-radius);
+            border: 2px solid #DFE6E9;
+            background: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
+        
+        .time-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+        
+        .time-btn.selected {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .result-container {
+            background: var(--light);
+            border-radius: var(--border-radius);
+            padding: 18px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .result-item {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+        }
+        
+        .emoji {
+            font-size: 1.2rem;
+            margin-right: 8px;
+            min-width: 24px;
+            text-align: center;
+        }
+        
+        .location {
+            font-weight: 600;
+            color: var(--dark);
+            margin-right: 5px;
+            white-space: nowrap;
+        }
+        
+        .time {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .btn-copy {
+            background: var(--light);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            padding: 12px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 20px;
+            transition: all 0.2s;
+        }
+        
+        .btn-copy:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #7F8C8D;
+            font-size: 0.8rem;
+            width: 100%;
+            max-width: 500px;
+            margin-top: 15px;
+            padding: 0 25px;
+        }
+        
+        @media (max-width: 600px) {
+            .time-buttons {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .header {
+                padding: 20px 20px 10px;
+            }
+            
+            .content {
+                padding: 15px 20px;
+            }
+            
+            h1 {
+                font-size: 1.4rem;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .time-buttons {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 6px;
+            }
+            
+            :root {
+                --button-size: 42px;
+            }
+            
+            body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>화이트데이 그리니치 문제 해석</h1>
+            <p class="subtitle">지구과학실 시간을 선택하세요</p>
+        </div>
+        
+        <div class="content">
+            <div class="time-buttons" id="timeButtons">
+                <!-- 1부터 12까지 버튼이 자동 생성됩니다 -->
+            </div>
+            
+            <div id="result" class="result-container">
+                <div class="result-grid">
+                    <div class="result-item">
+                        <span class="emoji">🌍</span>
+                        <span class="location">지구과학실</span>
+                        <span class="time" id="greenwich-result">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="emoji">💻</span>
+                        <span class="location">컴퓨터실</span>
+                        <span class="time" id="beijing-result">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="emoji">🎨</span>
+                        <span class="location">화실</span>
+                        <span class="time" id="moscow-result">-</span>
+                    </div>
+                    <div class="result-item">
+                        <span class="emoji">🔮</span>
+                        <span class="location">오컬트 동호회</span>
+                        <span class="time" id="washington-result">-</span>
+                    </div>
+                </div>
+                
+                <button class="btn-copy" onclick="copyResult()">결과 복사하기</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>지구과학실 시간을 기준으로 다른 장소의 시간을 계산합니다</p>
+    </div>
+
+    <script>
+        // 1부터 12까지 버튼 생성 및 초기화
+        const timeButtonsContainer = document.getElementById('timeButtons');
+        let selectedTime = null;
+        
+        function createTimeButtons() {
+            timeButtonsContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 12; i++) {
+                const button = document.createElement('button');
+                button.className = 'time-btn';
+                button.textContent = i;
+                button.onclick = function() {
+                    selectTime(this, i);
+                };
+                timeButtonsContainer.appendChild(button);
+            }
+            
+            // 저장된 값이 있으면 선택 상태 복원
+            const savedTime = localStorage.getItem('selectedTime');
+            if (savedTime) {
+                const buttons = timeButtonsContainer.querySelectorAll('.time-btn');
+                buttons.forEach(btn => {
+                    if (parseInt(btn.textContent) === parseInt(savedTime)) {
+                        selectTime(btn, parseInt(savedTime));
+                    }
+                });
+            } else {
+                // 기본으로 3시 선택
+                const defaultBtn = timeButtonsContainer.querySelector('.time-btn:nth-child(3)');
+                if (defaultBtn) selectTime(defaultBtn, 3);
+            }
+        }
+        
+        function selectTime(button, time) {
+            // 기존 선택 해제
+            if (selectedTime) {
+                selectedTime.classList.remove('selected');
+            }
+            
+            // 새 선택 적용
+            button.classList.add('selected');
+            selectedTime = button;
+            localStorage.setItem('selectedTime', time);
+            calculateTime(time);
+        }
+        
+        function calculateTime(greenwich) {
+            // 시간대 계산
+            let washington = greenwich - 3;
+            let moscow = greenwich + 3;
+            let beijing = greenwich + 8;
+            
+            // 워싱턴 시간 조정
+            if (washington <= 0) washington += 12;
+            if (moscow > 12) moscow -= 12;
+            if (beijing > 12) beijing -= 12;
+            
+            // 결과 표시
+            document.getElementById('greenwich-result').textContent = greenwich;
+            document.getElementById('beijing-result').textContent = beijing;
+            document.getElementById('moscow-result').textContent = moscow;
+            document.getElementById('washington-result').textContent = washington;
+        }
+        
+        function copyResult() {
+            if (!selectedTime) {
+                alert('먼저 시간을 선택해주세요');
+                return;
+            }
+            
+            const resultText = 
+                `🌐 지구과학실 : ${document.getElementById('greenwich-result').textContent}\n` +
+                `💻 컴퓨터실 : ${document.getElementById('beijing-result').textContent}\n` +
+                `🎨 화실 : ${document.getElementById('moscow-result').textContent}\n` +
+                `🔮 오컬트 동호회 : ${document.getElementById('washington-result').textContent}`;
+            
+            navigator.clipboard.writeText(resultText).then(() => {
+                alert('결과가 클립보드에 복사되었습니다!');
+            }).catch(err => {
+                console.error('클립보드 복사 실패:', err);
+                alert('복사에 실패했습니다. 직접 선택해서 복사해주세요.');
+            });
+        }
+        
+        // 초기화
+        createTimeButtons();
+    </script>
+</body>
+</html>
