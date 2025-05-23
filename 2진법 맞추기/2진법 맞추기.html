@@ -243,6 +243,7 @@
 <h2>숫자 맞추기 게임</h2>
 
 <div id="gameArea" style="display:none;">
+  <b><center>1~99까지 아무 숫자 하나를 생각하고, 끝까지 O / X</center></b>
   <div class="card-header">
     <h3 class="card-title">카드 <span id="currentCardIndex">1</span> / <span id="totalCards">1</span></h3>
     <div class="music-control">
@@ -256,11 +257,9 @@
   
   <div id="cardNumbers"></div>
 
-  <b><center>1~99까지 아무 숫자 하나를 고르고, 끝까지 O / X</center> </b>
-
   <div id="oxButtons">
-    <button id="btnYes">O (있음)</button>
-    <button id="btnNo">X (없음)</button>
+    <button id="btnYes">O (카드에 존재함)</button>
+    <button id="btnNo">X (카드에 존재하지 않음)</button>
   </div>
 
   <div id="navButtons">
