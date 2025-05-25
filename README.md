@@ -2,7 +2,9 @@
 
 [러시안 룰렛](https://githubkorean.github.io/html/?러시안%20룰렛/러시안%20룰렛.html)
 
-[숫자 맞추기 게임](https://githubkorean.github.io/html/?2진법%20맞추기/2진법%20맞추기.html)
+[생각한 숫자 맞추기](https://githubkorean.github.io/html/?2진법%20맞추기/2진법%20맞추기.html)
+
+[숫자 자리 맞추기 게임](https://githubkorean.github.io/html/?숫자%20자리%20맞추기%20게임/숫자%20자리%20맞추기%20게임.html)
 
 [몬티홀 문제](https://githubkorean.github.io/html/?몬티홀%20문제/몬티홀%20문제.html)
 
