@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>바코드 스캐너</title>
+<script src="https://unpkg.com/@zxing/library@latest"></script>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f9f9f9;
+    color: #333;
+  }
+
+  h1 {
+    color: #2c3e50;
+    text-align: center;
+    margin-bottom: 25px;
+  }
+
+  #startScanner {
+    display: block;
+    width: 200px;
+    margin: 0 auto 25px;
+    padding: 12px 20px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  #startScanner:hover {
+    background-color: #3367d6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .result-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+  .product-info {
+    margin-top: 15px;
+  }
+
+  .product-name {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #2c3e50;
+  }
+
+  .product-price {
+    font-size: 24px;
+    color: #e74c3c;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .barcode-info {
+    font-size: 16px;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+  }
+
+  /* New style for product image */
+  .product-image-container {
+    margin-top: 15px;
+    text-align: center; /* Center the image */
+  }
+
+  .product-image-container img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+
+
+  #scanner-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    background-color: #000;
+    display: none;
+    margin: 20px auto;
+  }
+
+  #video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .scan-guide {
+    position: absolute;
+    top: 50%;
+    left: 15%;
+    right: 15%;
+    height: 3px;
+    background: linear-gradient(to right,
+      transparent,
+      rgba(255, 50, 50, 0.9),
+      transparent);
+    transform: translateY(-50%);
+    z-index: 10;
+    animation: scan-animation 2s infinite alternate;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+  }
+
+  @keyframes scan-animation {
+    0% {
+      transform: translateY(-50%) scaleX(0.8);
+      opacity: 0.7;
+      background: linear-gradient(to right,
+        transparent,
+        rgba(255, 30, 30, 0.7),
+        transparent);
+    }
+    100% {
+      transform: translateY(-50%) scaleX(1);
+      opacity: 1;
+      background: linear-gradient(to right,
+        transparent,
+        rgba(255, 80, 80, 0.9),
+        transparent);
+    }
+  }
+
+  #scanner-result {
+    margin-top: 10px;
+    font-size: 1.1em;
+    text-align: center;
+    padding: 0 20px;
+    color: #666;
+    font-weight: 500;
+    display: none;
+  }
+
+  #stopScanner {
+    display: none;
+    width: 200px;
+    margin: 20px auto;
+    padding: 12px 20px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  #stopScanner:hover {
+    background-color: #d32f2f;
+  }
+
+  .loading {
+    text-align: center;
+    margin: 20px 0;
+    display: none;
+  }
+
+  .spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top: 4px solid #3498db;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .error-message {
+    color: #e74c3c;
+    text-align: center;
+    margin: 10px 0;
+    display: none;
+  }
+
+  @media (max-width: 480px) {
+    body {
+      padding: 15px;
+    }
+    
+    h1 {
+      font-size: 22px;
+    }
+    
+    #startScanner, #stopScanner {
+      width: 100%;
+    }
+  }
+</style>
+</head>
+<body>
+
+<h1>바코드 스캐너</h1>
+
+<button id="startScanner">스캔 시작</button>
+<button id="stopScanner">스캔 중지</button>
+
+<div id="scanner-container">
+  <video id="video" playsinline></video>
+  <div class="scan-guide"></div>
+</div>
+<div id="scanner-result">📷 바코드를 프레임 중앙에 위치시켜 주세요</div>
+
+<div class="loading">
+  <div class="spinner"></div>
+  <p>제품 정보를 가져오는 중...</p>
+</div>
+
+<div class="error-message" id="error-message"></div>
+
+<div class="result-container" style="display:none;">
+  <div class="product-info">
+    <div class="product-name" id="product-name">-</div>
+    <div class="product-price" id="product-price">-</div>
+    <div class="barcode-info">바코드: <span id="barcode-number">-</span></div>
+    <div class="product-image-container" id="product-image-container"></div> </div>
+</div>
+
+<script>
+  // 스캐너 관련 변수
+  const codeReader = new ZXing.BrowserMultiFormatReader();
+  const videoEl = document.getElementById("video");
+  const scannerContainer = document.getElementById("scanner-container");
+  const scannerResult = document.getElementById("scanner-result");
+  const startBtn = document.getElementById("startScanner");
+  const stopBtn = document.getElementById("stopScanner");
+  const loadingEl = document.querySelector(".loading");
+  const errorEl = document.getElementById("error-message");
+  const resultContainer = document.querySelector(".result-container");
+  const productNameEl = document.getElementById("product-name");
+  const productPriceEl = document.getElementById("product-price");
+  const barcodeNumberEl = document.getElementById("barcode-number");
+  const productImageContainer = document.getElementById('product-image-container'); // Get the new container
+  
+  const hints = new Map();
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, [
+    ZXing.BarcodeFormat.EAN_13,
+    ZXing.BarcodeFormat.CODE_128,
+    ZXing.BarcodeFormat.QR_CODE,
+    ZXing.BarcodeFormat.UPC_A,
+    ZXing.BarcodeFormat.EAN_8,
+    ZXing.BarcodeFormat.CODE_39,
+  ]);
+
+  let lastResult = "";
+  let lastTime = 0;
+  const DEBOUNCE_TIME_MS = 1500;
+  let isScanning = false;
+
+  function playSineBeep() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.type = 'sine';
+    oscillator.frequency.value = 2500;
+    gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.2);
+  }
+
+  function stopScanner() {
+    if (isScanning) {
+      codeReader.reset();
+      isScanning = false;
+      if (videoEl.srcObject) {
+        videoEl.srcObject.getTracks().forEach(track => track.stop());
+        videoEl.srcObject = null;
+      }
+      scannerContainer.style.display = 'none';
+      scannerResult.style.display = 'none';
+      startBtn.style.display = 'block';
+      stopBtn.style.display = 'none';
+    }
+  }
+
+  async function fetchProductInfo(barcode) {
+    try {
+      loadingEl.style.display = 'block';
+      errorEl.style.display = 'none';
+      resultContainer.style.display = 'none';
+      productImageContainer.innerHTML = ''; // Clear previous image
+
+      // CORS proxy for fetching product details
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(`https://www.pocketcu.co.kr/search/stock?isRecommend=Y&item_cd=${barcode}`)}`;
+      
+      const response = await fetch(proxyUrl);
+      const data = await response.json();
+      
+      if (!data.contents) {
+        throw new Error('제품 정보를 찾을 수 없습니다');
+      }
+      
+      // Parse HTML to extract product name and price
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(data.contents, 'text/html');
+      
+      const nameElement = doc.querySelector('.prd_wrap .name');
+      const productName = nameElement ? nameElement.textContent.trim() : '제품명 정보 없음';
+      
+      const priceElement = doc.querySelector('.prd_wrap .price strong');
+      const productPrice = priceElement ? priceElement.textContent.trim() + '원' : '가격 정보 없음';
+      
+      // Create and display the product image
+      const imageUrl = `https://arqachylpmku8348141.edge.naverncp.com/app/product/mst_product/${barcode}_L.jpg`;
+      const productImageEl = document.createElement('img');
+      productImageEl.src = imageUrl;
+      productImageEl.alt = productName; // Add alt text for accessibility
+      productImageContainer.appendChild(productImageEl);
+
+      // Display results
+      productNameEl.textContent = productName;
+      productPriceEl.textContent = productPrice;
+      barcodeNumberEl.textContent = barcode;
+      
+      resultContainer.style.display = 'block';
+      scannerResult.textContent = `✅ 제품 정보 로드 완료: ${barcode}`;
+    } catch (error) {
+      console.error('제품 정보 가져오기 실패:', error);
+      errorEl.textContent = '제품 정보를 가져오는데 실패했습니다. 사이트에서 직접 확인해 주세요.';
+      errorEl.style.display = 'block';
+      barcodeNumberEl.textContent = barcode;
+      resultContainer.style.display = 'block';
+      productNameEl.textContent = '정보 없음';
+      productPriceEl.textContent = '-';
+      productImageContainer.innerHTML = ''; // Clear image container on error
+      scannerResult.textContent = '⚠️ 제품 정보 가져오기 실패';
+    } finally {
+      loadingEl.style.display = 'none';
+    }
+  }
+
+  async function startScanner() {
+    try {
+      const videoInputDevices = await codeReader.listVideoInputDevices();
+
+      if (videoInputDevices.length === 0) {
+        scannerResult.textContent = "카메라를 찾을 수 없습니다.";
+        scannerResult.style.display = 'block';
+        return;
+      }
+
+      // Try to find a back camera, otherwise use the first available camera
+      const selectedDeviceId = videoInputDevices.find(device =>
+        device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('environment')
+      )?.deviceId || videoInputDevices[0]?.deviceId;
+
+      if (!selectedDeviceId) {
+          scannerResult.textContent = "사용 가능한 카메라를 찾을 수 없습니다.";
+          scannerResult.style.display = 'block';
+          return;
+      }
+
+      isScanning = true;
+      scannerContainer.style.display = 'block';
+      scannerResult.style.display = 'block';
+      scannerResult.textContent = "📷 바코드를 프레임 중앙에 위치시켜 주세요";
+      startBtn.style.display = 'none';
+      stopBtn.style.display = 'block';
+
+      codeReader.decodeFromVideoDevice(selectedDeviceId, videoEl, (result, err) => {
+        if (result) {
+          const now = Date.now();
+          if (now - lastTime < DEBOUNCE_TIME_MS) {
+            return;
+          }
+
+          const code = result.getText();
+          if (code && code !== lastResult) {
+            lastResult = code;
+            lastTime = now;
+            scannerResult.textContent = `✅ 바코드 인식됨: ${code}`;
+
+            playSineBeep();
+
+            if ('vibrate' in navigator) {
+              navigator.vibrate(200);
+            }
+
+            // Fetch product info including the image
+            fetchProductInfo(code);
+
+            // Stop scanner after a short delay
+            setTimeout(stopScanner, 1000);
+          }
+        }
+        if (err && !(err instanceof ZXing.NotFoundException)) {
+          console.error("ZXing error:", err);
+        }
+      }, hints);
+    } catch (err) {
+      console.error("Camera initialization failed:", err);
+      scannerResult.textContent = "카메라 초기화 실패: " + (err.message || "알 수 없는 오류");
+      scannerResult.style.display = 'block';
+    }
+  }
+
+  // Event Listeners
+  startBtn.addEventListener('click', startScanner);
+  stopBtn.addEventListener('click', stopScanner);
+
+  // Clean up scanner on page unload
+  window.addEventListener('beforeunload', stopScanner);
+</script>
+
+</body>
+</html>
