@@ -12,6 +12,8 @@
 
 [도구]
 
+[CU Scanner](https://githubkorean.github.io/html/?CU%20Scanner/CU%20Scanner.html)
+
 [YouTube Shorts to Normal](https://githubkorean.github.io/Shorts-to-Normal/)
 
 [HTML Editor](https://githubkorean.github.io/HTML-Editor/)
