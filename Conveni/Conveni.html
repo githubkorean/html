@@ -1,0 +1,308 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>편의점 물건 위치 조회</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        #preview {
+            max-width: 100%;
+            margin-top: 10px;
+            display: none;
+        }
+        #scanner-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            overflow: hidden;
+            border-radius: 12px;
+            background-color: #000;
+            margin: 10px 0;
+            display: none;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .scan-guide {
+            position: absolute;
+            top: 50%;
+            left: 15%;
+            right: 15%;
+            height: 3px;
+            background: linear-gradient(to right, transparent, rgba(255, 50, 50, 0.9), transparent);
+            transform: translateY(-50%);
+            z-index: 10;
+            animation: scan-animation 2s infinite alternate;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+        }
+        @keyframes scan-animation {
+            0% { 
+                transform: translateY(-50%) scaleX(0.8); 
+                opacity: 0.7; 
+                background: linear-gradient(to right, transparent, rgba(255, 30, 30, 0.7), transparent);
+            }
+            100% { 
+                transform: translateY(-50%) scaleX(1); 
+                opacity: 1; 
+                background: linear-gradient(to right, transparent, rgba(255, 80, 80, 0.9), transparent);
+            }
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .checkbox-container input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>이미지 복호화 시스템</h1>
+        
+        <div>
+            <input type="text" id="barcodeInput" placeholder="바코드 숫자 입력 또는 스캔 (엔터키로 실행)">
+            <div class="checkbox-container">
+                <input type="checkbox" id="autoSearch" checked>
+                <label for="autoSearch">바코드 스캔 후 자동 조회</label>
+            </div>
+            <button id="scanBtn">바코드 스캔</button>
+        </div>
+        
+        <div id="scanner-container">
+            <video id="video" playsinline></video>
+            <div class="scan-guide"></div>
+            <button id="closeScanner" style="position: absolute; top: 10px; right: 10px; background: red; width: auto;">닫기</button>
+        </div>
+        
+        <div id="result">
+            <div id="output"></div>
+            <img id="preview">
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    <script>
+        // Hardcoded password
+        const PASSWORD = "TEST";
+        
+        // DOM elements
+        const barcodeInput = document.getElementById('barcodeInput');
+        const scanBtn = document.getElementById('scanBtn');
+        const decryptBtn = document.getElementById('decryptBtn');
+        const scannerContainer = document.getElementById('scanner-container');
+        const videoEl = document.getElementById('video');
+        const closeScanner = document.getElementById('closeScanner');
+        const outputDiv = document.getElementById('output');
+        const previewImg = document.getElementById('preview');
+        const autoSearchCheckbox = document.getElementById('autoSearch');
+        
+        // ZXing scanner
+        const codeReader = new ZXing.BrowserMultiFormatReader();
+        let isScanning = false;
+        
+        // Initialize scanner
+        scanBtn.addEventListener('click', async () => {
+            scannerContainer.style.display = 'block';
+            
+            try {
+                const videoInputDevices = await codeReader.listVideoInputDevices();
+                const selectedDeviceId = videoInputDevices.length > 0 ? videoInputDevices[0].deviceId : null;
+                
+                if (!selectedDeviceId) {
+                    alert('카메라를 찾을 수 없습니다.');
+                    return;
+                }
+                
+                isScanning = true;
+                codeReader.decodeFromVideoDevice(selectedDeviceId, videoEl, (result, err) => {
+                    if (result) {
+                        const code = result.getText();
+                        barcodeInput.value = code;
+                        stopScanner();
+                        scannerContainer.style.display = 'none';
+                        
+                        // 자동 조회 체크박스 상태 확인
+                        if (autoSearchCheckbox.checked) {
+                            decryptImage();
+                        }
+                    }
+                    if (err && !(err instanceof ZXing.NotFoundException)) {
+                        console.error(err);
+                    }
+                });
+            } catch (err) {
+                console.error(err);
+                alert('스캐너 초기화 실패: ' + err.message);
+            }
+        });
+        
+        // Close scanner
+        closeScanner.addEventListener('click', () => {
+            stopScanner();
+            scannerContainer.style.display = 'none';
+        });
+        
+        // Enter key handler
+        barcodeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                decryptImage();
+                barcodeInput.value = ''; // 엔터 후 입력창 초기화
+            }
+        });
+        
+        // Decrypt button handler
+        decryptBtn.addEventListener('click', () => {
+            decryptImage();
+            barcodeInput.value = ''; // 조회 후 입력창 초기화
+        });
+        
+        function stopScanner() {
+            if (isScanning) {
+                codeReader.reset();
+                isScanning = false;
+            }
+        }
+        
+        // Main decryption function
+        async function decryptImage() {
+            const barcode = barcodeInput.value.trim();
+            
+            if (!barcode) {
+                alert('바코드 숫자를 입력하세요');
+                return;
+            }
+            
+            try {
+                previewImg.style.display = 'none';
+                
+                // Construct filename (assuming format is "barcode.enc")
+                const filename = 'https://raw.githubusercontent.com/githubkorean/html/refs/heads/main/Conveni/image/' + barcode + '.enc';
+                
+                // Fetch the encrypted file
+                const response = await fetch(filename);
+                if (!response.ok) {
+                    throw new Error('파일을 찾을 수 없습니다: ' + filename);
+                }
+                
+                const encryptedData = await response.arrayBuffer();
+                
+                // Extract salt (first 16 bytes)
+                const salt = encryptedData.slice(0, 16);
+                
+                // Extract IV (next 16 bytes)
+                const iv = encryptedData.slice(16, 32);
+                
+                // Extract actual encrypted data
+                const data = encryptedData.slice(32);
+                
+                // Derive key from password
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    'raw',
+                    new TextEncoder().encode(PASSWORD),
+                    { name: 'PBKDF2' },
+                    false,
+                    ['deriveKey']
+                );
+                
+                const key = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    { name: 'AES-CBC', length: 256 },
+                    false,
+                    ['decrypt']
+                );
+                
+                // Decrypt the data
+                const decryptedData = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'AES-CBC',
+                        iv: iv
+                    },
+                    key,
+                    data
+                );
+                
+                // Remove PKCS7 padding
+                const unpaddedData = removePKCS7Padding(new Uint8Array(decryptedData));
+                
+                // Create blob URL
+                const blob = new Blob([unpaddedData], { type: 'image/jpeg' });
+                const url = URL.createObjectURL(blob);
+                
+                // Display result
+                outputDiv.innerHTML = `
+                `;
+                
+                // Show image preview
+                previewImg.src = url;
+                previewImg.style.display = 'block';
+                
+            } catch (error) {
+                previewImg.style.display = 'none';
+            }
+        }
+        
+        function removePKCS7Padding(data) {
+            const padLength = data[data.length - 1];
+            if (padLength > 16) return data;
+            
+            // Verify padding bytes are correct
+            for (let i = 1; i <= padLength; i++) {
+                if (data[data.length - i] !== padLength) {
+                    return data;
+                }
+            }
+            return data.slice(0, data.length - padLength);
+        }
+        
+        // Clean up when page unloads
+        window.addEventListener('beforeunload', () => {
+            stopScanner();
+        });
+    </script>
+</body>
+</html>
