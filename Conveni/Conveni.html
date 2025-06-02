@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -145,7 +145,15 @@
             
             try {
                 const videoInputDevices = await codeReader.listVideoInputDevices();
-                const selectedDeviceId = videoInputDevices.length > 0 ? videoInputDevices[0].deviceId : null;
+				
+				// 기존 코드 (아무 카메라나 선택)
+				// const selectedDeviceId = videoInputDevices.length > 0 ? videoInputDevices[0].deviceId : null;
+				
+				// 수정 코드 (후면 카메라 우선 선택)
+				const selectedDeviceId = videoInputDevices.find(device => 
+					device.label.toLowerCase().includes('back') || 
+					device.label.toLowerCase().includes('environment')
+				)?.deviceId || videoInputDevices[0]?.deviceId;
                 
                 if (!selectedDeviceId) {
                     alert('카메라를 찾을 수 없습니다.');
