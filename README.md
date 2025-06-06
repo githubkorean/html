@@ -14,6 +14,8 @@
 
 [Conveni](https://githubkorean.github.io/html/?Conveni/Conveni.html)
 
+[Barcode Scanner](https://githubkorean.github.io/html/?Barcode%20Scanner/Barcode%20Scanner.html)
+
 [CU Scanner](https://githubkorean.github.io/html/?CU%20Scanner/CU%20Scanner.html)
 
 [YouTube Shorts to Normal](https://githubkorean.github.io/Shorts-to-Normal/)
