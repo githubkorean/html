@@ -17,7 +17,7 @@
             --log-bg-color: #232323;
             --log-border-color: #444;
             --font-family: 'Noto Sans KR', sans-serif;
-            --tooltip-bg-color: rgba(68, 68, 68, 0.85); /* 투명도 추가 */
+            --tooltip-bg-color: #444;
             --tooltip-text-color: #fff;
             --warning-color: #e53e3e;
             --warning-hover-color: #c53030;
@@ -36,7 +36,7 @@
             justify-content: center;
             align-items: center;
             color: var(--text-color);
-            position: relative; /* 툴팁 위치 기준 */
+            position: relative;
         }
 
         .container {
@@ -162,28 +162,37 @@
 
         /* 툴팁 스타일 수정 */
         .tooltip {
-            position: absolute; /* 절대 위치 */
-            bottom: 20px; /* 화면 하단에서 20px 위 */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 450px; /* 컨테이너 너비와 유사하게 */
+            visibility: hidden;
             background-color: var(--tooltip-bg-color);
             color: var(--tooltip-text-color);
-            text-align: center;
             border-radius: 6px;
             padding: 10px;
-            z-index: 10; /* 다른 요소 위에 표시 */
+            position: absolute;
+            z-index: 1;
+            top: 50%;
+            left: calc(100% + 10px); /* 입력창 오른쪽, 간격 10px */
+            transform: translateY(-50%);
+            width: 250px;
+            white-space: normal;
+            opacity: 0;
+            transition: opacity 0.3s;
             line-height: 1.4;
             font-size: 0.9em;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s, visibility 0.3s;
         }
         
-        .guess-input-group:hover + .tooltip,
-        .tooltip:hover { /* 입력창 호버 시 툴팁 표시 */
+        .tooltip::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 100%; /* 왼쪽 끝에 위치 */
+            margin-top: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: transparent var(--tooltip-bg-color) transparent transparent;
+        }
+
+        .guess-input-group:hover .tooltip {
             visibility: visible;
             opacity: 1;
         }
@@ -223,14 +232,13 @@
         <div class="guess-input-group">
             <label for="feedbackInput">결과 입력</label>
             <input type="text" id="feedbackInput" placeholder="자릿수를 설정하세요." disabled/>
-        </div>
-        
-        <div class="tooltip">
-            <p>결과를 두 자리 숫자로 입력해주세요.</p>
-            <p>첫 번째 숫자: 스트라이크 (위치와 숫자가 모두 일치)</p>
-            <p>두 번째 숫자: 볼 (숫자는 일치하지만 위치는 다름)</p>
-            <p>예시: 2스트라이크, 1볼 → **21** 입력</p>
-            <p>스트라이크 + 볼의 합은 게임 자릿수를 초과할 수 없습니다.</p>
+            <div class="tooltip">
+                <p>결과를 두 자리 숫자로 입력해주세요.</p>
+                <p>첫 번째 숫자: 스트라이크 (위치와 숫자가 모두 일치)</p>
+                <p>두 번째 숫자: 볼 (숫자는 일치하지만 위치는 다름)</p>
+                <p>예시: 2스트라이크, 1볼 → **21** 입력</p>
+                <p>스트라이크 + 볼의 합은 게임 자릿수를 초과할 수 없습니다.</p>
+            </div>
         </div>
         
         <div class="buttons">
