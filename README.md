@@ -28,7 +28,7 @@
 
 [게임 도구]
 
-[베이스볼 게임 도우미](https://githubkorean.github.io/html/?베이스볼%20게임%20도우미/베이스볼%20게임%20도우미.html)
+[숫자 야구 게임 도우미](https://githubkorean.github.io/html/?숫자%20야구%20게임%20도우미/숫자%20야구%20게임%20도우미.html)
 
 [화이트데이 체육창고 암호 해석](https://githubkorean.github.io/html/?체육창고%20계산/체육창고%20계산.html)
 
