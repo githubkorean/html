@@ -12,8 +12,6 @@
 
 [도구]
 
-[베이스볼 게임 도우미](https://githubkorean.github.io/html/?베이스볼%20게임%20도우미/베이스볼%20게임%20도우미.html)
-
 [Conveni](https://githubkorean.github.io/html/?Conveni/Conveni.html)
 
 [Barcode Scanner](https://githubkorean.github.io/html/?Barcode%20Scanner/Barcode%20Scanner.html)
@@ -29,6 +27,8 @@
 [URL Locker](https://githubkorean.github.io/url-locker/)
 
 [게임 도구]
+
+[베이스볼 게임 도우미](https://githubkorean.github.io/html/?베이스볼%20게임%20도우미/베이스볼%20게임%20도우미.html)
 
 [화이트데이 체육창고 암호 해석](https://githubkorean.github.io/html/?체육창고%20계산/체육창고%20계산.html)
 
