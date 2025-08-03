@@ -378,6 +378,8 @@
             newGameButton.disabled = false;
             submitButton.disabled = false;
             
+            feedbackInput.disabled = false; /* 이 부분이 추가되었습니다 */
+            
             const maxStrikeExample = digitCount === 2 ? '1' : `${digitCount - 1}`;
             feedbackInput.placeholder = `예: ${maxStrikeExample}1, 0${digitCount}`;
             
@@ -395,7 +397,7 @@
             generateCandidates();
             isGameStarted = true;
             
-            feedbackInput.disabled = false;
+            feedbackInput.disabled = false; /* 이 부분이 추가되었습니다 */
             submitButton.disabled = false;
             
             guessBox.textContent = '게임이 리셋되었습니다. 새로운 추측을 시작합니다.';
@@ -417,6 +419,8 @@
             startGameButton.disabled = false;
             newGameButton.disabled = true;
             submitButton.disabled = true;
+            
+            feedbackInput.disabled = true; /* 이 부분은 그대로 유지됩니다 */
             
             digitCountInput.value = 4;
             guessBox.textContent = '자릿수를 설정하고 게임을 시작하세요.';
